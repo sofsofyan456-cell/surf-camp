@@ -5,7 +5,7 @@ export const siteConfig = {
   shortName: "Surf & Sand",
   description: "Experience the ultimate surf stay on the coast. Comfortable rooms, great vibes, and epic waves.",
   // We will leave the WhatsApp number empty for now. You can add it later!
-  whatsappNumber: "212708254833", 
+  whatsappNumber: "212650224546", 
   currency: "MAD",
   contact: {
     email: "youssefalhyan@gmail.com",
