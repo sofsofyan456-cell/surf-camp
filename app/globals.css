@@ -1,0 +1,28 @@
+/* filepath: app/globals.css */
+@import "tailwindcss";
+
+@theme {
+  /* Coastal Surf Camp Theme */
+  --color-sand-50: #fdfbf7;
+  --color-sand-100: #f5f2eb;
+  --color-sand-200: #e8e2d2;
+  
+  --color-ocean-800: #143a5f;
+  --color-ocean-900: #0a2540;
+  
+  --color-turquoise-400: #48cae4;
+  --color-turquoise-500: #00b4d8;
+  --color-turquoise-600: #0096c7;
+}
+
+@layer base {
+  :root {
+    background-color: var(--color-sand-50);
+    color: var(--color-ocean-900);
+  }
+
+  /* Smooth scrolling when clicking links */
+  html {
+    scroll-behavior: smooth;
+  }
+}
