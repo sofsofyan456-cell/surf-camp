@@ -436,9 +436,6 @@ export async function uploadImage(formData: FormData) {
       };
     }
 
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      throw new Error("BLOB_READ_WRITE_TOKEN is not configured.");
-    }
 
     const filename = `uploads/${crypto.randomUUID()}${extension}`;
 
@@ -446,6 +443,7 @@ export async function uploadImage(formData: FormData) {
       access: "public",
       addRandomSuffix: false,
       contentType: file.type,
+      storeId: process.env.BLOB_STORE_ID,
     });
 
     return {
