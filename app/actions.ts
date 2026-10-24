@@ -1,6 +1,6 @@
 // filepath: app/actions.ts
 "use server";
-
+import { put } from "@vercel/blob";
 import { db } from "../lib/db";
 import { revalidatePath } from "next/cache";
 import { writeFile, mkdir } from "fs/promises";
@@ -394,6 +394,7 @@ export async function saveDashboardData(
 
 
 // --- FILE UPLOAD ACTION ---
+
 export async function uploadImage(formData: FormData) {
   if (!(await requireAdmin())) {
     return { success: false, error: "Unauthorized" };
@@ -403,18 +404,23 @@ export async function uploadImage(formData: FormData) {
     const file = formData.get("file");
 
     if (!(file instanceof File) || file.size === 0) {
-      return { success: false, error: "No valid file provided." };
+      return {
+        success: false,
+        error: "No valid file provided.",
+      };
     }
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/gif",
-      "image/avif",
-    ];
+    const allowedTypes: Record<string, string> = {
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/webp": ".webp",
+      "image/gif": ".gif",
+      "image/avif": ".avif",
+    };
 
-    if (!allowedTypes.includes(file.type)) {
+    const extension = allowedTypes[file.type];
+
+    if (!extension) {
       return {
         success: false,
         error: "Unsupported image format. Use JPG, PNG, WebP, GIF, or AVIF.",
@@ -430,33 +436,28 @@ export async function uploadImage(formData: FormData) {
       };
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      throw new Error("BLOB_READ_WRITE_TOKEN is not configured.");
+    }
 
-    const extensionByType: Record<string, string> = {
-      "image/jpeg": ".jpg",
-      "image/png": ".png",
-      "image/webp": ".webp",
-      "image/gif": ".gif",
-      "image/avif": ".avif",
-    };
+    const filename = `uploads/${crypto.randomUUID()}${extension}`;
 
-    const filename = `${Date.now()}-${crypto.randomUUID()}${extensionByType[file.type]}`;
-    const uploadDir = join(process.cwd(), "public", "uploads");
-
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(join(uploadDir, filename), buffer);
+    const blob = await put(filename, file, {
+      access: "public",
+      addRandomSuffix: false,
+      contentType: file.type,
+    });
 
     return {
       success: true,
-      url: `/uploads/${filename}`,
+      url: blob.url,
     };
   } catch (error) {
     console.error("Upload error:", error);
 
     return {
       success: false,
-      error: "Server could not save the image. Check the terminal for details.",
+      error: "Image upload failed. Please try again.",
     };
   }
 }
