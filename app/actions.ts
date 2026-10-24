@@ -342,14 +342,39 @@ export async function saveDashboardData(
         create: { id: 1, ...config },
       });
 
+
       // 2. Save rooms and remove rooms deleted from the dashboard.
       for (const room of rooms) {
+        const roomData = {
+          name: room.name,
+          pricePerNight: Number(room.pricePerNight ?? 0),
+          capacity: Number(room.capacity ?? 1),
+          beds: String(room.beds ?? "1"),
+          description: room.description ?? "",
+          image: room.image ?? "",
+        };
+
+        if (
+          typeof room.id !== "string" ||
+          !room.id.trim() ||
+          !Number.isFinite(roomData.pricePerNight) ||
+          roomData.pricePerNight < 0 ||
+          !Number.isInteger(roomData.capacity) ||
+          roomData.capacity < 1
+        ) {
+          throw new Error("Invalid room data.");
+        }
+
         await tx.room.upsert({
           where: { id: room.id },
-          update: room,
-          create: room,
+          update: roomData,
+          create: {
+            id: room.id,
+            ...roomData,
+          },
         });
       }
+
 
       const roomIds = rooms.map((room) => room.id);
 

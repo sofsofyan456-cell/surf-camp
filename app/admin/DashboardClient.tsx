@@ -146,6 +146,8 @@ export default function AdminDashboardClient({
         id: `room-${Date.now()}`,
         name: "New Room",
         pricePerNight: 0,
+        capacity: 1,
+        beds: "1",
         description: "",
         image: "",
       },
@@ -614,7 +616,19 @@ export default function AdminDashboardClient({
                         className="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-turquoise-500"
                         placeholder="Price per night"
                       />
-
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={room.capacity ?? 1}
+                        onChange={(event) =>
+                          updateRoom(index, {
+                            capacity: Number(event.target.value),
+                          })
+                        }
+                        placeholder="Room capacity"
+                        className="w-full rounded-lg border p-3"
+                      />
                       <textarea
                         value={room.description ?? ""}
                         onChange={(event) =>
