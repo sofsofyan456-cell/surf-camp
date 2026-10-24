@@ -1,7 +1,6 @@
 
 "use client";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import {
   saveDashboardData,
@@ -31,6 +30,7 @@ export default function AdminDashboardClient({
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [activityToDelete, setActivityToDelete] = useState<any>(null);
+  const [roomToDelete, setRoomToDelete] = useState<any>(null);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -39,6 +39,17 @@ export default function AdminDashboardClient({
   const [passwordError, setPasswordError] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState(false);
+
+  useEffect(() => {
+    if (!saveMessage) return;
+
+    const timeout = window.setTimeout(() => {
+      setSaveMessage("");
+      setSaveError(false);
+    }, 3000);
+
+    return () => window.clearTimeout(timeout);
+  }, [saveMessage]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -128,14 +139,39 @@ export default function AdminDashboardClient({
       },
     ]);
   };
-
-  const updateRoom = (index: number, changes: any) => {
-    setRooms((prev: any[]) =>
-      prev.map((room, i) =>
-        i === index ? { ...room, ...changes } : room,
-      ),
-    );
+  const addRoom = () => {
+    setRooms((prev: any[]) => [
+      ...prev,
+      {
+        id: `room-${Date.now()}`,
+        name: "New Room",
+        pricePerNight: 0,
+        description: "",
+        image: "",
+      },
+    ]);
   };
+
+  const deleteRoom = () => {
+    if (!roomToDelete) return;
+
+    setRooms((prev: any[]) =>
+      prev.filter((room) => room.id !== roomToDelete.id),
+    );
+
+    setRoomToDelete(null);
+  };
+
+  const cancelDeleteRoom = () => {
+    setRoomToDelete(null);
+  };
+    const updateRoom = (index: number, changes: any) => {
+      setRooms((prev: any[]) =>
+        prev.map((room, i) =>
+          i === index ? { ...room, ...changes } : room,
+        ),
+      );
+    };
 
   const updateActivity = (index: number, changes: any) => {
     setActivities((prev: any[]) =>
@@ -589,6 +625,15 @@ export default function AdminDashboardClient({
                         className="h-24 w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-turquoise-500"
                         placeholder="Room description"
                       />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setRoomToDelete(room)}
+                          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                        >
+                          🗑 Delete Room
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -599,6 +644,15 @@ export default function AdminDashboardClient({
                   No rooms available.
                 </p>
               )}
+              <div className="flex justify-center pt-2">
+                <button
+                  type="button"
+                  onClick={addRoom}
+                  className="rounded-lg bg-ocean-800 px-8 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-ocean-700"
+                >
+                  + Add Room
+                </button>
+              </div>
             </div>
           )}
 
@@ -879,6 +933,55 @@ export default function AdminDashboardClient({
             </div>
           </div>
         )}
+        {/* DELETE ROOM CONFIRMATION MODAL */}
+          {roomToDelete && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-ocean-900/60 px-4 py-6 backdrop-blur-sm"
+              onClick={cancelDeleteRoom}
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-room-title"
+                className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <h2
+                  id="delete-room-title"
+                  className="text-center text-xl font-bold text-ocean-900"
+                >
+                  Delete Room?
+                </h2>
+
+                <p className="mt-3 text-center text-sm text-gray-600">
+                  Are you sure you want to delete{" "}
+                  <strong>{roomToDelete.name || "Untitled Room"}</strong>?
+                </p>
+
+                <p className="mt-2 text-center text-xs text-gray-500">
+                  Click Save after confirming to apply the changes.
+                </p>
+
+                <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={cancelDeleteRoom}
+                    className="flex-1 rounded-lg border border-gray-300 px-5 py-3 font-semibold text-gray-700 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={deleteRoom}
+                    className="flex-1 rounded-lg bg-red-600 px-5 py-3 font-semibold text-white hover:bg-red-700"
+                  >
+                    🗑 Delete Room
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );

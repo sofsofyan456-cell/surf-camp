@@ -7,24 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Config {
   id             Int    @id @default(autoincrement())
   name           String
   whatsappNumber String
-
   address        String @default("123 Coastal Road, Taghazout, Morocco")
   contactEmail   String @default("youssefalhyan@gmail.com")
-
   heroImage      String @default("https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=2000")
   heroText       String @default("Comfort Stay, Better Waves")
-
   aboutTitle     String @default("Our Story")
   aboutText1     String @default("Welcome to Surf & Sand! We created this space to share our passion for the ocean, local culture, and meeting people from all over the world.")
   aboutText2     String @default("Whether you are catching your first wave, looking for a comfortable bed after a long day of exploring, or wanting to share stories around the evening fire, you will find your home here.")
   aboutImage     String @default("/about-us.png")
 }
-
 
 model Room {
   id            String @id

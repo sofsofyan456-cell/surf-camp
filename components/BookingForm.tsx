@@ -2,10 +2,19 @@
 "use client";
 
 import { useState } from "react";
-import { siteConfig } from "../config/site";
 
-// We allow the form to start with a specific room already selected
-export default function BookingForm({ initialRoomId = "" }: { initialRoomId?: string }) {
+// We now pass rooms, whatsappNumber, and shortName as props from the database!
+export default function BookingForm({ 
+  initialRoomId = "", 
+  rooms = [], 
+  whatsappNumber = "",
+  shortName = "Surf & Sand"
+}: { 
+  initialRoomId?: string, 
+  rooms?: any[], 
+  whatsappNumber?: string,
+  shortName?: string
+}) {
   const [roomId, setRoomId] = useState(initialRoomId);
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
@@ -17,13 +26,11 @@ export default function BookingForm({ initialRoomId = "" }: { initialRoomId?: st
     e.preventDefault();
     setError("");
 
-    // 1. Check if all fields are filled
     if (!roomId || !checkIn || !checkOut || !guestName) {
       setError("Please fill in all fields (Room, Check In, Check Out, Name).");
       return;
     }
 
-    // 2. Validate dates
     const inDate = new Date(checkIn);
     const outDate = new Date(checkOut);
     if (outDate <= inDate) {
@@ -31,22 +38,18 @@ export default function BookingForm({ initialRoomId = "" }: { initialRoomId?: st
       return;
     }
 
-    // 3. Find the selected room's name
-    const selectedRoom = siteConfig.rooms.find(r => r.id === roomId);
+    // Find the room from our dynamically passed database rooms
+    const selectedRoom = rooms.find(r => r.id === roomId);
     const roomName = selectedRoom ? selectedRoom.name : "a room";
 
-    // 4. Create the WhatsApp message
-    const message = `Hello ${siteConfig.shortName} team! 🏄‍♂️\n\nI would like to make a booking inquiry:\n\n👤 Name: ${guestName}\n🛏️ Room: ${roomName}\n📅 Check-in: ${checkIn}\n📅 Check-out: ${checkOut}\n👥 Guests: ${guests}\n\nIs this available? I understand payment is cash on arrival. Thank you!`;
+    const message = `Hello ${shortName} team! 🏄‍♂️\n\nI would like to make a booking inquiry:\n\n👤 Name: ${guestName}\n🛏️ Room: ${roomName}\n📅 Check-in: ${checkIn}\n📅 Check-out: ${checkOut}\n👥 Guests: ${guests}\n\nIs this available? I understand payment is cash on arrival. Thank you!`;
 
-    // 5. Open WhatsApp
-    const whatsappNum = siteConfig.whatsappNumber;
-    if (!whatsappNum) {
-      alert("DEVELOPER WARNING: No WhatsApp number is set in config/site.ts! Add one to test this.");
+    if (!whatsappNumber) {
+      alert("DEVELOPER WARNING: No WhatsApp number is set in the database! Add one in the admin dashboard.");
       return;
     }
 
-    // Encode the text so it safely works in a URL
-    const whatsappUrl = `https://wa.me/${whatsappNum}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
   };
 
@@ -56,78 +59,41 @@ export default function BookingForm({ initialRoomId = "" }: { initialRoomId?: st
         Book Your Surf Stay
       </h3>
       
-      {/* Show Error Message if there is one */}
       {error && <div className="mb-4 text-red-600 text-sm font-semibold bg-red-50 p-3 rounded">{error}</div>}
       
       <form onSubmit={handleBooking} className="flex flex-col md:flex-row gap-4 items-end flex-wrap">
-        
-        {/* Name Input */}
         <div className="flex-1 w-full min-w-[150px]">
           <label className="block text-sm font-semibold text-gray-700 mb-1">Your Name</label>
-          <input 
-            type="text" 
-            placeholder="John Doe"
-            value={guestName}
-            onChange={(e) => setGuestName(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-turquoise-500" 
-          />
+          <input type="text" placeholder="John Doe" value={guestName} onChange={(e) => setGuestName(e.target.value)} className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-turquoise-500" />
         </div>
 
-        {/* Room Selection */}
         <div className="flex-1 w-full min-w-[150px]">
           <label className="block text-sm font-semibold text-gray-700 mb-1">Room Type</label>
-          <select 
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-turquoise-500"
-          >
+          <select value={roomId} onChange={(e) => setRoomId(e.target.value)} className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-turquoise-500">
             <option value="">Select a room...</option>
-            {siteConfig.rooms.map((room) => (
+            {rooms.map((room) => (
               <option key={room.id} value={room.id}>{room.name}</option>
             ))}
           </select>
         </div>
 
-        {/* Check In */}
         <div className="flex-1 w-full min-w-[130px]">
           <label className="block text-sm font-semibold text-gray-700 mb-1">Check In</label>
-          <input 
-            type="date" 
-            value={checkIn}
-            onChange={(e) => setCheckIn(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-turquoise-500" 
-          />
+          <input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-turquoise-500" />
         </div>
 
-        {/* Check Out */}
         <div className="flex-1 w-full min-w-[130px]">
           <label className="block text-sm font-semibold text-gray-700 mb-1">Check Out</label>
-          <input 
-            type="date" 
-            value={checkOut}
-            onChange={(e) => setCheckOut(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-turquoise-500" 
-          />
+          <input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-turquoise-500" />
         </div>
 
-        {/* Guests */}
         <div className="w-full md:w-24">
           <label className="block text-sm font-semibold text-gray-700 mb-1">Guests</label>
-          <input 
-            type="number" 
-            min="1" 
-            value={guests}
-            onChange={(e) => setGuests(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-turquoise-500" 
-          />
+          <input type="number" min="1" value={guests} onChange={(e) => setGuests(e.target.value)} className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-turquoise-500" />
         </div>
 
-        {/* Submit Button */}
         <div className="w-full md:w-auto mt-4 md:mt-0">
-          <button 
-            type="submit" 
-            className="w-full md:w-auto bg-turquoise-500 hover:bg-turquoise-600 text-white font-bold py-3 px-8 rounded-lg transition-colors shadow-md"
-          >
+          <button type="submit" className="w-full md:w-auto bg-turquoise-500 hover:bg-turquoise-600 text-white font-bold py-3 px-8 rounded-lg transition-colors shadow-md">
             Inquire Now
           </button>
         </div>

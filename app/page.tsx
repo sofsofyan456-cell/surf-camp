@@ -1,9 +1,21 @@
 // filepath: app/page.tsx
-import { siteConfig } from "../config/site";
+import { db } from "../lib/db";
+import { siteConfig } from "../config/site"; // We keep this for static stuff like currency
 import BookingForm from "../components/BookingForm";
-import Link from "next/link"; // <-- Import the Link component
+import Link from "next/link";
 
-export default function Home() {
+export const instant = false;
+
+export default async function Home() {
+  // Fetch data from our new database!
+  const dbConfig = await db.config.findFirst({ where: { id: 1 } });
+  const dbRooms = await db.room.findMany();
+
+  // If DB is empty, use the fallback config
+  const siteName = dbConfig?.name || siteConfig.name;
+  const whatsapp = dbConfig?.whatsappNumber || siteConfig.whatsappNumber;
+  const rooms = dbRooms.length > 0 ? dbRooms : siteConfig.rooms;
+
   return (
     <div className="flex flex-col min-h-screen">
       
@@ -15,7 +27,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-ocean-900/40"></div>
         <div className="relative z-10 space-y-4 mt-8">
           <h1 className="text-5xl md:text-7xl font-extrabold text-white drop-shadow-lg tracking-tight">
-            {siteConfig.name}
+            {siteName}
           </h1>
           <p className="text-xl md:text-2xl text-sand-50 font-medium drop-shadow-md">
             Comfort Stay, Better Waves
@@ -25,7 +37,7 @@ export default function Home() {
 
       {/* 2. FLOATING BOOKING FORM */}
       <div className="px-4 -mt-16 relative z-20">
-        <BookingForm />
+        <BookingForm rooms={rooms} whatsappNumber={whatsapp} shortName={siteConfig.shortName} />
       </div>
 
       {/* 3. OUR ROOMS SECTION */}
@@ -35,7 +47,7 @@ export default function Home() {
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {siteConfig.rooms.map((room) => (
+          {rooms.map((room) => (
             <div key={room.id} className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col transition-transform hover:-translate-y-1 duration-300">
               <div className="h-64 overflow-hidden relative">
                 <img src={room.image} alt={room.name} className="w-full h-full object-cover" />
@@ -56,7 +68,6 @@ export default function Home() {
                     <span className="font-bold text-turquoise-600">{room.pricePerNight} {siteConfig.currency}</span>
                     <span className="text-sm text-gray-500"> / night</span>
                   </div>
-                  {/* Changed from <button> to <Link> */}
                   <Link 
                     href={`/rooms/${room.id}`}
                     className="bg-ocean-800 hover:bg-ocean-900 text-white px-5 py-2 rounded-lg font-medium transition-colors"

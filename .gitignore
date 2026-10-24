@@ -1,4 +1,42 @@
+
+# Dependencies
 node_modules/
+
+# Next.js
 .next/
-.env*
+out/
+.vercel/
+
+# Environment variables and secrets
+.env
+.env.*
 !.env.example
+
+# Local SQLite databases and backups
+prisma/*.db
+prisma/*.db-*
+prisma/*.sqlite
+prisma/*.sqlite-*
+prisma/*.backup*
+prisma/*.bak
+
+# Generated files
+*.tsbuildinfo
+/app/generated/prisma
+
+# Temporary migration files and local database exports
+.migrate-sqlite-to-neon.mjs
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+surf-camp-sqlite-export.json
+
+# SQLite database backups
+prisma/*.backup*
+prisma/*.bak
+prisma/*schema*.backup*
+codebase.md
+tsconfig.tsbuildinfo
+.vercel
+.env*

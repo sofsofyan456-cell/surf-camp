@@ -1,27 +1,31 @@
 // filepath: app/rooms/[id]/page.tsx
+import { db } from "../../../lib/db";
 import { siteConfig } from "../../../config/site";
 import BookingForm from "../../../components/BookingForm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
-// --- NEW CODE ---
-// This tells Next.js exactly which pages to build in advance!
-export function generateStaticParams() {
-  return siteConfig.rooms.map((room) => ({
-    id: room.id,
-  }));
-}
-// ----------------
+export const instant = false;
 
 export default async function RoomPage({ params }: { params: Promise<{ id: string }> }) {
-  // In Next.js 16, params is a Promise, so we must await it
   const resolvedParams = await params;
   const roomId = resolvedParams.id;
   
-  // Find the room data based on the URL id
-  const room = siteConfig.rooms.find((r) => r.id === roomId);
+  // 1. Fetch this specific room from the database
+  let room = await db.room.findUnique({ where: { id: roomId } });
+  
+  // 2. Fetch all rooms and config for the booking form
+  const dbRooms = await db.room.findMany();
+  const dbConfig = await db.config.findFirst({ where: { id: 1 } });
+  
+  const allRooms = dbRooms.length > 0 ? dbRooms : siteConfig.rooms;
+  const whatsapp = dbConfig?.whatsappNumber || siteConfig.whatsappNumber;
 
-  // If the user types a bad URL, show a 404 page
+  // Fallback if DB is empty
+  if (!room) {
+    room = siteConfig.rooms.find((r) => r.id === roomId) as any;
+  }
+
+  // If the room STILL doesn't exist, show 404
   if (!room) {
     notFound();
   }
@@ -30,12 +34,10 @@ export default async function RoomPage({ params }: { params: Promise<{ id: strin
     <div className="min-h-screen bg-sand-50 py-10">
       <div className="max-w-5xl mx-auto px-4">
         
-        {/* Back button */}
         <Link href="/#rooms" className="text-turquoise-600 hover:text-turquoise-500 font-semibold flex items-center gap-2 mb-6">
           ← Back to all rooms
         </Link>
 
-        {/* Room Header and Image */}
         <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-10">
           <div className="h-[400px] md:h-[500px] relative">
             <img src={room.image} alt={room.name} className="w-full h-full object-cover" />
@@ -63,9 +65,8 @@ export default async function RoomPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
 
-        {/* Pre-filled Booking Form */}
         <h2 className="text-2xl font-bold text-ocean-900 mb-6 text-center">Book the {room.name}</h2>
-        <BookingForm initialRoomId={room.id} />
+        <BookingForm initialRoomId={room.id} rooms={allRooms} whatsappNumber={whatsapp} shortName={siteConfig.shortName} />
         
       </div>
     </div>
